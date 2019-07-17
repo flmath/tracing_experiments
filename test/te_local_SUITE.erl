@@ -8,14 +8,14 @@
          end_per_suite/1]).
 
 %% Tests
--export([switch_test/1]).
+-export([five_seconds_test/1, switch_test/1]).
 
 %%==============================================================================
 %% Common Test
 %%==============================================================================
 
 all() ->
-  [switch_test].
+  [switch_test, five_seconds_test].
 
 init_per_suite(Config) ->
     OK1 = application:start(tracing_experiments),
@@ -37,3 +37,11 @@ switch_test(_Config) ->
 	gen_statem:call(tracing_experiments, get_value),
     ct:pal("get state ~p~n",[{State, No}]).
 
+five_seconds_test(_Config) ->
+    {ok, light_state, No} = 
+	gen_statem:call(tracing_experiments, get_value),
+    tracing_experiments:switch_state(),
+    timer:sleep(5000),
+    tracing_experiments:switch_state(),
+    NewNo = No+6,
+    {ok, light_state, NewNo} = gen_statem:call(tracing_experiments, get_value).

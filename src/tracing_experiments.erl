@@ -46,7 +46,7 @@ callback_mode() ->
 light_state(cast, switch_state, State) ->
     #{iterator:=Number}=State,
     traced_function(enter_heavy_state, Number),
-    {next_state, heavy_state, State#{iterator:=Number+1},1000};
+    {next_state, heavy_state, State#{iterator:=Number+1}, 1000};
 light_state({call, From}, get_value, State) ->    
     #{iterator:=Number} = State,     
     {next_state, light_state, State, [{reply, From, {ok, light_state, Number}}]}.
@@ -57,23 +57,17 @@ heavy_state(cast, switch_state, State) ->
     {next_state, light_state, State#{iterator:=Number+1}};
 heavy_state(timeout, _Event, State) ->   
     #{iterator:=Number}=State,
-    traced_function(stay_heavy_state, Number),
-    {next_state, heavy_state, State#{iterator:=Number+1},1000};
+    traced_function(keep_heavy_state, Number),
+    {next_state, heavy_state, State#{iterator:=Number+1}, 1000};
 heavy_state({call, From}, get_value, State) ->  
     #{iterator:=Number}=State,       
     {next_state, heavy_state, State, [{reply, From, {ok, heavy_state, Number}}]}.
 
 
-
 %%--------------------------------------------------------------------
-
-handle_call(From, stop, State) ->
-     {stop_and_reply, normal,  {reply, From, ok}, State}.
-
 terminate(_Reason, _StateName, _State) ->
     ok.
 
-%%--------------------------------------------------------------------
 code_change(_OldVsn, StateName, State, _Extra) ->
     {ok, StateName, State}.
 

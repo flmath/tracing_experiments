@@ -47,10 +47,11 @@ light_state(cast, switch_state, State) ->
     #{iterator:=Number}=State,
     traced_function(enter_heavy_state, Number),
     {next_state, heavy_state, State#{iterator:=Number+1},1000};
-light_state({call, From}, Msg, State) ->    
-    handle_call(From, Msg, State).
+light_state({call, From}, get_value, State) ->    
+    #{iterator:=Number} = State,     
+    {next_state, light_state, State, [{reply, From, {ok, light_state, Number}}]}.
 
-heavy_state(cast, _Event, State) ->   
+heavy_state(cast, switch_state, State) ->   
     #{iterator:=Number}=State,
     traced_function(enter_light_state, Number),
     {next_state, light_state, State#{iterator:=Number+1}};
@@ -58,8 +59,9 @@ heavy_state(timeout, _Event, State) ->
     #{iterator:=Number}=State,
     traced_function(stay_heavy_state, Number),
     {next_state, heavy_state, State#{iterator:=Number+1},1000};
-heavy_state({call, From}, Msg, State) ->    
-    handle_call(From, Msg, State).
+heavy_state({call, From}, get_value, State) ->  
+    #{iterator:=Number}=State,       
+    {next_state, heavy_state, State, [{reply, From, {ok, heavy_state, Number}}]}.
 
 
 

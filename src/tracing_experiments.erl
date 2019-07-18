@@ -9,6 +9,8 @@
 
 -behaviour(gen_statem).
 
+-include_lib("tracing_experiments/include/tracing_experiments.hrl").
+
 %% API
 -export([start_link/0]).
 -export([switch_state/0, stop/0]).
@@ -46,22 +48,24 @@ callback_mode() ->
 light_state(cast, switch_state, State) ->
     #{iterator:=Number}=State,
     traced_function(enter_heavy_state, Number),
-    {next_state, heavy_state, State#{iterator:=Number+1}, 1000};
+    {next_state, heavy_state, State#{iterator:=Number+1}, ?HeavyStateWindowLength};
 light_state({call, From}, get_value, State) ->    
     #{iterator:=Number} = State,     
     {next_state, light_state, State, [{reply, From, {ok, light_state, Number}}]}.
 
 heavy_state(cast, switch_state, State) ->   
-    #{iterator:=Number}=State,
+    #{iterator:=Number} = State,
     traced_function(enter_light_state, Number),
     {next_state, light_state, State#{iterator:=Number+1}};
 heavy_state(timeout, _Event, State) ->   
-    #{iterator:=Number}=State,
+    #{iterator:=Number} = State,
     traced_function(keep_heavy_state, Number),
-    {next_state, heavy_state, State#{iterator:=Number+1}, 1000};
+    {next_state, heavy_state, State#{iterator:=Number+1}, ?HeavyStateWindowLength};
 heavy_state({call, From}, get_value, State) ->  
-    #{iterator:=Number}=State,       
-    {next_state, heavy_state, State, [{reply, From, {ok, heavy_state, Number}}]}.
+    #{iterator:=Number} = State,       
+    {next_state, heavy_state, State,
+     [{reply, From, {ok, heavy_state, Number}}, 
+      {timeout, ?HeavyStateWindowLength, back_to_heavy_state}]}.
 
 
 %%--------------------------------------------------------------------
@@ -75,5 +79,5 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-traced_function(StateName, Number)->
-    io:format("io:format called from state ~p number ~p~n", [StateName, Number]).
+traced_function(_StateName, _Number)->
+    ?debugFmt("io:format called from state ~p number ~p~n", [_StateName, _Number]).

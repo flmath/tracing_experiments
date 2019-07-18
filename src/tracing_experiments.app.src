@@ -1,15 +1,17 @@
 {application, tracing_experiments,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
-  {registered, []},
+  {registered, [tracing_experiments]},
   {mod, {tracing_experiments_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    sasl
    ]},
   {env,[]},
-  {modules, []},
-
+  {modules, [tracing_experiments,
+	     tracing_experiments_sup,
+	     tracing_experiments_app]},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.

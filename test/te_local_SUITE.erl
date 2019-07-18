@@ -1,6 +1,7 @@
 -module(te_local_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
+-include_lib("tracing_experiments/include/tracing_experiments.hrl").
 
 %% Common Test
 -export([all/0,
@@ -18,15 +19,16 @@ all() ->
   [switch_test, five_seconds_test].
 
 init_per_suite(Config) ->
-    OK1 = application:start(tracing_experiments),
-    ct:pal("************************* applications start ~p", [OK1]),
+    OK1 = application:start(sasl),
+    OK2 = application:start(tracing_experiments),
+    ct:pal("************************* applications start ~p", [{OK1,OK2}]),
     Config.
 
 end_per_suite(Config) ->  
     OK2 = application:stop(tracing_experiments),
-    ct:pal("************************* applications stop ~p", [OK2]),
-
-  Config.
+    OK1 = application:stop(sasl),
+    ct:pal("************************* applications stop ~p", [{OK1,OK2}]),
+    Config.
 
 %%==============================================================================
 %% Exported Test functions
@@ -41,7 +43,8 @@ five_seconds_test(_Config) ->
     {ok, light_state, No} = 
 	gen_statem:call(tracing_experiments, get_value),
     tracing_experiments:switch_state(),
-    timer:sleep(5000),
+    timer:sleep(5 * ?HeavyStateWindowLength),
+    {ok, heavy_state, _No} = gen_statem:call(tracing_experiments, get_value),
     tracing_experiments:switch_state(),
     NewNo = No+6,
     {ok, light_state, NewNo} = gen_statem:call(tracing_experiments, get_value).

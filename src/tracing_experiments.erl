@@ -25,13 +25,13 @@
 
 %%--------------------------------------------------------------------
 start_link() ->
-    gen_statem:start_link({local, ?NAME}, ?MODULE, [], []).
+    gen_statem:start_link({global, ?NAME}, ?MODULE, [], []).
 
 switch_state()->
-    gen_statem:cast(?NAME, switch_state).
+    gen_statem:cast({global, ?NAME}, switch_state).
 
 stop() ->
-    gen_statem:call(?NAME, stop).
+    gen_statem:call({global, ?NAME}, stop).
 
 %%%===================================================================
 %%% gen_statem callbacks

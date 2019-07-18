@@ -36,15 +36,15 @@ end_per_suite(Config) ->
 
 switch_test(_Config) ->
     {ok, State, No} = 
-	gen_statem:call(tracing_experiments, get_value),
+	gen_statem:call({global, tracing_experiments}, get_value),
     ct:pal("get state ~p~n",[{State, No}]).
 
 five_seconds_test(_Config) ->
     {ok, light_state, No} = 
-	gen_statem:call(tracing_experiments, get_value),
+	gen_statem:call({global, tracing_experiments}, get_value),
     tracing_experiments:switch_state(),
     timer:sleep(5 * ?HeavyStateWindowLength),
-    {ok, heavy_state, _No} = gen_statem:call(tracing_experiments, get_value),
+    {ok, heavy_state, _No} = gen_statem:call({global, tracing_experiments}, get_value),
     tracing_experiments:switch_state(),
     NewNo = No+6,
-    {ok, light_state, NewNo} = gen_statem:call(tracing_experiments, get_value).
+    {ok, light_state, NewNo} = gen_statem:call({global, tracing_experiments}, get_value).

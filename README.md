@@ -6,12 +6,12 @@ An OTP application
 Build
 -----
 
-    $ rebar3 compile
+    $ local_rebar/rebar3 compile
 
 Run
 -----
 
-    $ rebar3 shell
+    $ local_rebar/rebar3 shell
     > tracing_experiments:switch_state().
     ...
     > tracing_experiments:switch_state().
@@ -20,11 +20,17 @@ Run
 Common test without debug info
 -----
   
-    $ rebar3 as ct ct --sname=my_node
+    $ local_rebar/rebar3 as ct ct --sname=my_node
     $ firefox ctlogs/index.html 
 
 Common test with debug info
 -----
   
-    $ rebar3 as ct_dbg ct --suite te_SUITE 
+    $ local_rebar/rebar3 as ct_dbg ct --suite te_SUITE 
+    $ firefox ctlogs/index.html 
+
+Common test with distributed nodes
+-----
+  
+    $ ./dist_ct.sh  
     $ firefox ctlogs/index.html 

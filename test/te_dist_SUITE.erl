@@ -1,7 +1,7 @@
 -module(te_dist_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
--include_lib("tracing_experiments/include/tracing_experiments.hrl").
+-include("../include/tracing_experiments.hrl").
 
 %% Common Test
 -export([all/0,
@@ -16,18 +16,29 @@
 %%==============================================================================
 
 all() ->
-  [switch_test, five_seconds_test].
+    [switch_test, five_seconds_test].
 
 init_per_suite(Config) ->
-    OK1 = application:start(sasl),
-    OK2 = application:start(tracing_experiments),
-    ct:pal("************************* applications start ~p", [{OK1,OK2}]),
+    {ok, HostNodeA} = start_slave(a),
+    ct:pal("************************* applications start ~p", [{HostNodeA}]),
+    ok = global:sync(),
     Config.
 
+start_slave(Node)->
+    ErlFlags = "-pa ../../_build/dist+test/lib/*/ebin",
+    {ok, HostNode} = 
+	ct_slave:start(Node,
+		       [{kill_if_fail, true}, {monitor_master, true},
+			{init_timeout, 3000}, {startup_timeout, 3000},
+			{startup_functions, 
+			 [{application, start, [sasl]},
+			  {application, start, [tracing_experiments]}]},
+			{erl_flags, ErlFlags}]),
+    pong = net_adm:ping(HostNode),    
+    ct:pal("pong == ~p",[ pong = net_adm:ping(HostNode)]),
+    {ok, HostNode}.
+
 end_per_suite(Config) ->  
-    OK2 = application:stop(tracing_experiments),
-    OK1 = application:stop(sasl),
-    ct:pal("************************* applications stop ~p", [{OK1,OK2}]),
     Config.
 
 %%==============================================================================
@@ -42,9 +53,9 @@ switch_test(_Config) ->
 five_seconds_test(_Config) ->
     {ok, light_state, No} = 
 	gen_statem:call({global, tracing_experiments}, get_value),
-    tracing_experiments:switch_state(),
+    gen_statem:cast({global, tracing_experiments}, switch_state),
     timer:sleep(5 * ?HeavyStateWindowLength),
     {ok, heavy_state, _No} = gen_statem:call({global, tracing_experiments}, get_value),
-    tracing_experiments:switch_state(),
+    gen_statem:cast({global, tracing_experiments}, switch_state),
     NewNo = No+6,
     {ok, light_state, NewNo} = gen_statem:call({global, tracing_experiments}, get_value).

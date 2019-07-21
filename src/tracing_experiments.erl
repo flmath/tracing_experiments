@@ -12,8 +12,8 @@
 -include_lib("tracing_experiments/include/tracing_experiments.hrl").
 
 %% API
--export([start_link/0]).
--export([switch_state/0, stop/0]).
+-export([start_link/0, stop/0]).
+-export([get_state/0, switch_state/0]).
 %% gen_statem callbacks
 -export([init/1, callback_mode/0, light_state/3, heavy_state/3,
 	 terminate/3, code_change/4]).
@@ -29,6 +29,9 @@ start_link() ->
 
 switch_state()->
     gen_statem:cast({global, ?NAME}, switch_state).
+
+get_state()->
+    gen_statem:call({global, ?NAME}, get_value).
 
 stop() ->
     gen_statem:call({global, ?NAME}, stop).

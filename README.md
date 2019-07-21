@@ -11,7 +11,7 @@ Build
 Run
 -----
 
-    $ local_rebar/rebar3 shell
+    $ local_rebar/rebar3 as dbg shell
     > tracing_experiments:switch_state().
     ...
     > tracing_experiments:switch_state().
